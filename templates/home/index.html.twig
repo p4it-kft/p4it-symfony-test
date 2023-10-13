@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home!{% endblock %}
+
+{% block body %}
+
+<style>
+    li {
+        display: inline-block;
+        padding: 20px;
+    }
+    li a:hover {
+        text-decoration: underline;
+    }
+    li a {
+        text-decoration: none;
+    }
+</style>
+    <ul>
+        <li><a href="/tell-me">Contact Us</a></li>
+        <li><a href="/tell-me/advanced">Contact Us (advanced)</a></li>
+    </ul>
+{% endblock %}

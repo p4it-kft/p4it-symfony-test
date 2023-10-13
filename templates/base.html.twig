@@ -10,7 +10,26 @@
         {% block javascripts %}
         {% endblock %}
     </head>
+
+    <style>
+        li {
+            display: inline-block;
+            padding: 20px;
+        }
+        li a:hover {
+            text-decoration: underline;
+        }
+        li a {
+            text-decoration: none;
+        }
+    </style>
+
     <body>
+
+    {% for message in app.session.flashBag.get('success') %}
+        <div>{{ message }}</div>
+    {% endfor %}
+
         {% block body %}{% endblock %}
     </body>
 </html>

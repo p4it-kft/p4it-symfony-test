@@ -41,7 +41,7 @@ class ContactUsAdvancedController extends AbstractController
         $formBuilder = $this->createFormBuilder($message)
             ->add('name')
             ->add('title')
-            ->add('text')
+            ->add('text', TextareaType::class)
             ->add('email')
 
 //            ->add('email', TextType::class, [

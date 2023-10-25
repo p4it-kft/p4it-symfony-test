@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Advanced form!{% endblock %}
+
+{% block body %}
+
+<a href="{{ path('tell_me_advanced - create') }}">Create a message</a>
+
+<h1>Message list</h1>
+
+<ul>
+    {% for message in messages %}
+        <li><a href="{{ path('tell_me_advanced - update', {id: message.id}) }}">{{ message }}</a><br></li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

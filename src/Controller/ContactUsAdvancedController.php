@@ -4,91 +4,79 @@ namespace App\Controller;
 
 use App\Entity\formModel\MessageForm;
 use App\Entity\Message;
-use App\Entity\MessageAuthor;
-use App\Entity\Tag;
+use App\Form\Type\MessageFormType;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
-use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\NotBlank;
 
 class ContactUsAdvancedController extends AbstractController
 {
-    #[Route('/contact/us/advanced', name: 'app_contact_us_advanced')]
-    public function index(): Response
+    #[Route('/tell-me-advanced/create', name: 'tell_me_advanced - create')]
+    public function create(): Response
     {
-        return $this->render('contact_us_advanced/index.html.twig', [
-            'controller_name' => 'ContactUsAdvancedController',
+        $messageForm = new MessageForm();
+
+        $form = $this->createForm(MessageFormType::class, $messageForm, [
+            'action' => $this->generateUrl('tell-me-advanced/store')
         ]);
+
+        return $this->render('contact-us-advanced/form.html.twig', compact('form'));
     }
 
-    #[Route('/tell-me/advanced')]
-    public function advanced(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('/tell-me-advanced/update/{id}', name: 'tell_me_advanced - update')]
+    public function update($id, EntityManagerInterface $entityManager): Response
     {
-        $message = new MessageForm();
+        $message = $entityManager->getRepository(Message::class)->find($id);
 
-//        $author = new MessageAuthor();
-//        $message->setAuthor($author);
+        $messageForm = new MessageForm();
+        $messageForm->setMessage($message);
 
-        $formBuilder = $this->createFormBuilder($message)
-            ->add('name')
-            ->add('title')
-            ->add('text', TextareaType::class)
-            ->add('email')
+        $form = $this->createForm(MessageFormType::class, $messageForm, [
+            'action' => $this->generateUrl('tell-me-advanced/store', ['id' => $messageForm->getMessageId()])
+        ]);
 
-//            ->add('email', TextType::class, [
-//                'mapped' => false,
-//                'constraints' => [
-//                    new NotBlank([
-//                        'message' => 'Choose an email!'
-//                    ]),
-//                    new Length([
-//                        'min' => 25,
-//                        'minMessage' => 'Too short email!'
-//                    ])
-//                ]
-//            ])
+        return $this->render('contact-us-advanced/form.html.twig', compact('form'));
+    }
 
-            ->add('tag', EntityType::class, [
-                'class' => Tag::class,
-//                'choices' => $entityManager->getRepository(Tag::class)->findAll(),
-                'multiple' => true,
-                'expanded' => false,
-            ])
-            ->add('save', SubmitType::class, ['label' => 'Send']);
+    #[Route('/tell-me-advanced/store/{id?}', name: 'tell-me-advanced/store')]
+    public function store(Request $request, EntityManagerInterface $entityManager, $id): Response
+    {
+        $messageForm = new MessageForm();
 
-//        $formBuilder->addEventSubscriber(new AddU)
-
-        $form = $formBuilder->getForm();
+        $form = $this->createForm(MessageFormType::class, $messageForm);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $author = new MessageAuthor();
-            $author->setName($form->get('name')->getData());
-            $author->setEmail($form->get('email')->getData());
-            $entityManager->persist($author);
 
-            /** @var Message $message */
-            $message = $form->getData();
-            $message->setAuthor($author);
-            $entityManager->persist($message);
+            if ($id) {
+                $message = $entityManager->getRepository(Message::class)->find($id);
 
-            $entityManager->flush();
+                $messageForm = new MessageForm();
+                $messageForm->setMessage($message);
+
+                $messageId = $messageForm->updateAll($entityManager, $form);
+            } else {
+                $messageId = $messageForm->insertAll($entityManager, $form);
+            }
 
             $this->addFlash('success', 'Message and its relations are saved');
 
-            return $this->redirectToRoute('app_message_sent');
+            return $this->redirectToRoute('tell_me_advanced - update', ['id' => $messageId]);
         }
 
-        return $this->render('contact-us/advanced.html.twig', compact('form'));
+        return $this->redirectToRoute('tell_me_advanced - create');
+    }
+
+    #[Route('/tell-me-advanced/list', name: 'tell me - advanced -- list')]
+    public function list(EntityManagerInterface $entityManager): Response
+    {
+        $messages = $entityManager->getRepository(Message::class)->findAll();
+
+        return $this->render('contact-us-advanced/list.html.twig', [
+            'messages' => $messages,
+        ]);
     }
 
 }

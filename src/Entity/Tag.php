@@ -37,12 +37,16 @@ class Tag
     #[ORM\ManyToMany(targetEntity: 'Message', mappedBy: 'tag')]
     private $message = array();
 
+    #[ORM\OneToMany(mappedBy: 'tag', targetEntity: MessageHasTag::class)]
+    private Collection $messageHasTags;
+
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->message = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->message = new ArrayCollection();
+        $this->messageHasTags = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -92,6 +96,36 @@ class Tag
     public function __toString(): string
     {
         return $this->label;
+    }
+
+    /**
+     * @return Collection<int, MessageHasTag>
+     */
+    public function getMessageHasTags(): Collection
+    {
+        return $this->messageHasTags;
+    }
+
+    public function addMessageHasTag(MessageHasTag $messageHasTag): static
+    {
+        if (!$this->messageHasTags->contains($messageHasTag)) {
+            $this->messageHasTags->add($messageHasTag);
+            $messageHasTag->setTag($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMessageHasTag(MessageHasTag $messageHasTag): static
+    {
+        if ($this->messageHasTags->removeElement($messageHasTag)) {
+            // set the owning side to null (unless already changed)
+            if ($messageHasTag->getTag() === $this) {
+                $messageHasTag->setTag(null);
+            }
+        }
+
+        return $this;
     }
 
 }

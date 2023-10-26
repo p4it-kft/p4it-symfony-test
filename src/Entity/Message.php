@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 
 /**
  * Message
@@ -46,15 +47,15 @@ class Message
     private $text;
 
     /**
-     * @var MessageAuthor
+     * @var MessageAuthor|null
      *
      */
     #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id')]
-    #[ORM\ManyToOne(targetEntity: 'MessageAuthor')]
-    private $author;
+    #[ORM\OneToOne(targetEntity: 'MessageAuthor', inversedBy: 'message', cascade: ['persist', 'remove'])]
+    private ?MessageAuthor $author = null;
 
     /**
-     * @var Collection
+     * @var PersistentCollection
      *
      */
     #[ORM\JoinTable(name: 'message_has_tag')]
@@ -63,8 +64,15 @@ class Message
     #[ORM\ManyToMany(targetEntity: 'Tag', inversedBy: 'message')]
     private $tags = [];
 
+    /**
+     * @var PersistentCollection
+     *
+     * This will actually be a PersistentCollection (as every relation - in my opinion)
+     * In the construct I cannot instantiate the PersistentCollection (required more parameters)
+     *
+     */
     #[ORM\OneToMany(mappedBy: 'message', targetEntity: MessageHasTag::class)]
-    private Collection $messageHasTags;
+    private $messageHasTags = [];
 
     /**
      * Constructor
@@ -116,22 +124,7 @@ class Message
         return $this;
     }
 
-    public function getAuthor(): ?MessageAuthor
-    {
-        return $this->author;
-    }
-
-    public function setAuthor(?MessageAuthor $author): static
-    {
-        $this->author = $author;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Tag>
-     */
-    public function getTags(): Collection
+    public function getTags(): PersistentCollection
     {
         return $this->tags;
     }
@@ -152,10 +145,7 @@ class Message
         return $this;
     }
 
-    /**
-     * @return Collection<int, MessageHasTag>
-     */
-    public function getMessageHasTags(): Collection
+    public function getMessageHasTags(): PersistentCollection
     {
         return $this->messageHasTags;
     }
@@ -197,6 +187,18 @@ class Message
         $outputData[] = '(' . implode(', ', $tagLabels) . ')';
 
         return implode(' | ', $outputData);
+    }
+
+    public function getAuthor(): ?MessageAuthor
+    {
+        return $this->author;
+    }
+
+    public function setAuthor(?MessageAuthor $author): static
+    {
+        $this->author = $author;
+
+        return $this;
     }
 
 }

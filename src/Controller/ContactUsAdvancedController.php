@@ -14,34 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class ContactUsAdvancedController extends AbstractController
 {
     #[Route('/tell-me-advanced/create', name: 'tell_me_advanced - create')]
-    public function create(): Response
-    {
-        $messageForm = new MessageForm();
-
-        $form = $this->createForm(MessageFormType::class, $messageForm, [
-            'action' => $this->generateUrl('tell-me-advanced/store')
-        ]);
-
-        return $this->render('contact-us-advanced/form.html.twig', compact('form'));
-    }
-
-    #[Route('/tell-me-advanced/update/{id}', name: 'tell_me_advanced - update')]
-    public function update($id, EntityManagerInterface $entityManager): Response
-    {
-        $message = $entityManager->getRepository(Message::class)->find($id);
-
-        $messageForm = new MessageForm();
-        $messageForm->setMessage($message);
-
-        $form = $this->createForm(MessageFormType::class, $messageForm, [
-            'action' => $this->generateUrl('tell-me-advanced/store', ['id' => $messageForm->getMessageId()])
-        ]);
-
-        return $this->render('contact-us-advanced/form.html.twig', compact('form'));
-    }
-
-    #[Route('/tell-me-advanced/store/{id?}', name: 'tell-me-advanced/store')]
-    public function store(Request $request, EntityManagerInterface $entityManager, $id): Response
+    public function create(Request $request, EntityManagerInterface $entityManager): Response
     {
         $messageForm = new MessageForm();
 
@@ -50,23 +23,39 @@ class ContactUsAdvancedController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
 
-            if ($id) {
-                $message = $entityManager->getRepository(Message::class)->find($id);
+            $messageId = $messageForm->insertAll($entityManager, $form);
 
-                $messageForm = new MessageForm();
-                $messageForm->setMessage($message);
-
-                $messageId = $messageForm->updateAll($entityManager, $form);
-            } else {
-                $messageId = $messageForm->insertAll($entityManager, $form);
-            }
-
-            $this->addFlash('success', 'Message and its relations are saved');
+            $this->addFlash('success', 'Message and its relations are created');
 
             return $this->redirectToRoute('tell_me_advanced - update', ['id' => $messageId]);
         }
 
-        return $this->redirectToRoute('tell_me_advanced - create');
+        return $this->render('contact-us-advanced/form-explained.html.twig', compact('form'));
+    }
+
+    #[Route('/tell-me-advanced/update/{id}', name: 'tell_me_advanced - update')]
+    public function update($id, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $message = $entityManager->getRepository(Message::class)->find($id);
+
+        $messageForm = new MessageForm();
+        $messageForm->setMessage($message);
+
+        $form = $this->createForm(MessageFormType::class, $messageForm, [
+            'action' => $this->generateUrl('tell_me_advanced - update', ['id' => $messageForm->getMessageId()])
+        ]);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $messageForm->updateAll($entityManager, $form);
+
+            $this->addFlash('success', 'Message and its relations are created');
+
+            return $this->redirectToRoute('tell_me_advanced - update', ['id' => $messageForm->getMessageId()]);
+        }
+
+        return $this->render('contact-us-advanced/form.html.twig', compact('form'));
     }
 
     #[Route('/tell-me-advanced/list', name: 'tell me - advanced -- list')]

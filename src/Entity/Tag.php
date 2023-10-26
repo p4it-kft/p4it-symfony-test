@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 
 /**
  * Tag
@@ -31,14 +32,17 @@ class Tag
     private $label;
 
     /**
-     * @var \Doctrine\Common\Collections\Collection
+     * @var PersistentCollection
      *
      */
     #[ORM\ManyToMany(targetEntity: 'Message', mappedBy: 'tag')]
-    private $message = array();
+    private $message = [];
 
+    /**
+     * @var PersistentCollection
+     */
     #[ORM\OneToMany(mappedBy: 'tag', targetEntity: MessageHasTag::class)]
-    private Collection $messageHasTags;
+    private $messageHasTags = [];
 
     /**
      * Constructor
@@ -66,10 +70,7 @@ class Tag
         return $this;
     }
 
-    /**
-     * @return Collection<int, Message>
-     */
-    public function getMessage(): Collection
+    public function getMessage(): PersistentCollection
     {
         return $this->message;
     }
@@ -98,10 +99,7 @@ class Tag
         return $this->label;
     }
 
-    /**
-     * @return Collection<int, MessageHasTag>
-     */
-    public function getMessageHasTags(): Collection
+    public function getMessageHasTags(): PersistentCollection
     {
         return $this->messageHasTags;
     }

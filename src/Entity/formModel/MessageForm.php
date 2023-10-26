@@ -86,8 +86,8 @@ class MessageForm extends Message
         $this->setTitle($message->getTitle());
         $this->setText($message->getText());
 
-        $this->setAuthorEmail($message->getAuthor()->getEmail());
-        $this->setMessageTags($message->getTags());
+        $this->setAuthorEmail($message->getAuthor() ? $message->getAuthor()->getEmail() : '');
+        $this->setMessageTags($message->getTags()->toArray());
     }
 
     public function insertAll(EntityManagerInterface $entityManager, FormInterface $form): ?int
@@ -106,16 +106,11 @@ class MessageForm extends Message
                 ->setText($form->get('text')->getData())
                 ->setAuthor($author);
 
-            $newTags = $form->get('messageTags')->getData()->toArray();
+            $newTags = $form->get('messageTags')->getData();
             foreach ($newTags as $newTag) {
-                $newMessageHasTag = new MessageHasTag();
-                $newMessageHasTag->setMessage($message);
-                $newMessageHasTag->setTag($newTag);
-
-                $entityManager->persist($newMessageHasTag);
+                $message->addTag($newTag);
             }
 
-            $entityManager->persist($author);
             $entityManager->persist($message);
             $entityManager->flush();
 
@@ -129,14 +124,14 @@ class MessageForm extends Message
         }
     }
 
-    public function updateAll(EntityManagerInterface $entityManager, FormInterface $form): ?int
+    public function updateAll(EntityManagerInterface $entityManager, FormInterface $form): void
     {
         $entityManager->getConnection()->beginTransaction();
 
         try {
             $message = $entityManager->getRepository(Message::class)->find($this->messageId);
             $messageAuthor = $message->getAuthor();
-            $oldMessageHasTags = $message->getMessageHasTags()->toArray();
+            $oldMessageTags = $message->getTags()->toArray();
 
             $message
                 ->setName($form->get('name')->getData())
@@ -154,28 +149,18 @@ class MessageForm extends Message
                 $messageAuthor->setEmail($form->get('authorEmail')->getData());
             }
 
-            $entityManager->persist($messageAuthor);
-            $entityManager->persist($message);
-
-            $newTags = $form->get('messageTags')->getData()->toArray();
-            foreach ($oldMessageHasTags as $oldMessageHasTag) {
-                $entityManager->remove($oldMessageHasTag);
+            foreach ($oldMessageTags as $oldMessageTag) {
+                $message->removeTag($oldMessageTag);
             }
-
+            $newTags = $form->get('messageTags')->getData();
             foreach ($newTags as $newTag) {
-                $newMessageHasTag = new MessageHasTag();
-                $newMessageHasTag->setMessage($message);
-                $newMessageHasTag->setTag($newTag);
-
-                $entityManager->persist($newMessageHasTag);
+                $message->addTag($newTag);
             }
 
+            $entityManager->persist($message);
             $entityManager->flush();
 
             $entityManager->getConnection()->commit();
-
-            return $message->getId();
-
         } catch (\Exception $e) {
             $entityManager->getConnection()->rollBack();
 

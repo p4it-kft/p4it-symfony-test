@@ -35,6 +35,9 @@ class MessageAuthor
     #[ORM\Column(name: 'email', type: 'string', length: 255, nullable: false)]
     private $email;
 
+    #[ORM\OneToOne(mappedBy: 'author', cascade: ['persist', 'remove'])]
+    private ?Message $message = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -60,6 +63,28 @@ class MessageAuthor
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getMessage(): ?Message
+    {
+        return $this->message;
+    }
+
+    public function setMessage(?Message $message): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($message === null && $this->message !== null) {
+            $this->message->setAuthor(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($message !== null && $message->getAuthor() !== $this) {
+            $message->setAuthor($this);
+        }
+
+        $this->message = $message;
 
         return $this;
     }

@@ -70,7 +70,7 @@ class Tag
         return $this;
     }
 
-    public function getMessage(): PersistentCollection
+    public function getMessage(): Collection
     {
         return $this->message;
     }
@@ -99,7 +99,7 @@ class Tag
         return $this->label;
     }
 
-    public function getMessageHasTags(): PersistentCollection
+    public function getMessageHasTags(): Collection
     {
         return $this->messageHasTags;
     }

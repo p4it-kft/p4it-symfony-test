@@ -124,7 +124,7 @@ class Message
         return $this;
     }
 
-    public function getTags(): PersistentCollection
+    public function getTags(): Collection
     {
         return $this->tags;
     }
@@ -145,7 +145,7 @@ class Message
         return $this;
     }
 
-    public function getMessageHasTags(): PersistentCollection
+    public function getMessageHasTags(): Collection
     {
         return $this->messageHasTags;
     }
